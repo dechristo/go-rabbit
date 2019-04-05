@@ -2,7 +2,7 @@ package main
 
 import (	
 	"log"
-
+	
 	"github.com/streadway/amqp"
 )
 
@@ -25,20 +25,42 @@ func main () {
 	)
 	failOnError(err, "Ooops! Something went wrong declaring the queue")
 
-	body := "Try not. Do or do not. There is no try."
+	bodyM1 := "Try not. Do or do not. There is no try."
+	bodyM2 := "That's why you fail."
 	
-	err = ch.Publish(
-		"",
-		queue.Name,
-		false,
-		false,
-		amqp.Publishing {
-			ContentType: "application/json",
-			Body: []byte(body),
-		},
-	)
-	log.Printf(" [x] Sent %s", body)
-	failOnError(err, "Publishing message failed.")	
+	go func() {
+		for i:=0; i < 10; i++ {
+			err = ch.Publish(
+				"",
+				queue.Name,
+				false,
+				false,
+				amqp.Publishing {
+					ContentType: "application/json",
+					Body: []byte(bodyM1),
+				},
+			)
+			log.Printf(" [-----] Sent %s", bodyM1)
+			failOnError(err, "Publishing message failed.")
+		}
+	
+	}()
+
+	for i:=0; i < 10; i++ {
+		err = ch.Publish(
+			"",
+			queue.Name,
+			false,
+			false,
+			amqp.Publishing {
+				ContentType: "application/json",
+				Body: []byte(bodyM2),
+			},
+		)
+		log.Printf(" [+++++] Sent %s", bodyM2)
+		failOnError(err, "Publishing message failed.")
+	}	
+			
 }
 
 func failOnError(err error, msg string) {
